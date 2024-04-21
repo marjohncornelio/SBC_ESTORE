@@ -1,0 +1,101 @@
+﻿@page "/admin/products"
+
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@inject NavigationManager NavigationManager
+@inject IClientProductService ProductService
+
+<PageTitle>All Products</PageTitle>
+<title>All Products</title>
+
+<PageLayout>
+    <MudPaper Class="d-flex justify-space-between mb-5 px-2" Outlined="false" Elevation="0">
+    <MudText Typo="Typo.h6" Class="py-2 px-md-5">All Products</MudText>
+    <AuthorizeView Roles="SUPERUSER">
+        <MudButton OnClick="AddProduct"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   Color="Color.Success"
+                   Variant="Variant.Filled"
+                   Size="Size.Small">
+            Add New Product
+        </MudButton>
+    </AuthorizeView>
+</MudPaper>
+    @if (products.Count == 0 && !isLoading)
+    {
+        <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mt-10"><em>No Product</em></MudText>
+    }
+    else
+    {
+        <MudTable Items="products" Hover="true" Striped="true" Class="mb-3" Loading="@isLoading">
+            <HeaderContent>
+                <MudTh> Image </MudTh>
+                <MudTh> Name </MudTh>
+                <MudTh> Price </MudTh>
+                <MudTh> Quantity </MudTh>
+                <MudTh colSpan="2"> Action </MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Image">
+                    <MudImage Src="@context.ImageUrl" Height="50"></MudImage>
+                </MudTd>
+                <MudTd DataLabel="Title">@Helpers.TruncateString(context.Name, 80)</MudTd>
+                <MudTd DataLabel="Publisher">@Helpers.FormatToPhilippinePeso(context.Price)</MudTd>
+                <MudTd DataLabel="Release Year">@context.Quantity</MudTd>
+                <MudTd DataLabel="Edit">
+                    <MudButton OnClick="() => EditProduct(context.Id)"
+                               StartIcon="@Icons.Material.Filled.Edit"
+                               Color="Color.Primary"
+                               Variant="Variant.Filled">
+                        Edit
+                    </MudButton>
+                </MudTd>
+                <MudTd DataLabel="Delete">
+                    <MudButton OnClick="() => DeleteProduct(context.Id)"
+                               StartIcon="@Icons.Material.Filled.Delete"
+                               Color="Color.Error"
+                               Variant="Variant.Filled">
+                        Delete
+                    </MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+
+</PageLayout>
+
+@code {
+    List<ProductDTO> products = new List<ProductDTO>();
+
+    public bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        await Task.Delay(1000);
+        await LoadProduct();
+    }
+
+    async Task DeleteProduct(int id)
+    {
+        await ProductService.DeleteProduct(id);
+        await LoadProduct();
+    }
+
+    async Task LoadProduct()
+    {
+        var response = await ProductService.GetAllProducts();
+        if (response != null)
+            products = response;
+        isLoading = false;
+    }
+
+    void AddProduct()
+    {
+        NavigationManager.NavigateTo("/admin/add-product");
+    }
+    void EditProduct(int id)
+    {
+        NavigationManager.NavigateTo($"/admin/edit-product/{id}");
+
+    }
+}

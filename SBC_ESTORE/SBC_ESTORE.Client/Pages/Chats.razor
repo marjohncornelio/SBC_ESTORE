@@ -1,0 +1,103 @@
+﻿@page "/chats"
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@inject NavigationManager NavigationManager
+
+<PageTitle>Chats</PageTitle>
+<title>Chats</title>
+
+<PageLayout>
+    <MudText Typo="Typo.h6" Class="py-2 px-md-5">Chats</MudText>
+
+    @if (IsConnected)
+    {
+        <MudContainer Class="position-relative">
+            <div class="d-flex flex-column px-4" style="min-height: 70vh; padding-bottom: 50px" id="chatContainer">
+                @foreach (var message in messages)
+                {
+                    <div class="d-flex flex-row my-4 @((message?.SenderId == userId) ? "justify-content-end" : "")">
+                        @if (message?.SenderId != userId)
+                        {
+                            <div class="mr-4">
+                                <MudAvatar Color="Color.Secondary" Style="height:50px; width:50px;">
+                                    <MudImage Src="@message?.SenderAvatar"></MudImage>
+                                </MudAvatar>
+                            </div>
+                        }
+                        <div class="@((message?.SenderId == userId) ? "text-end ml-4" : "")">
+                            <MudText Typo="Typo.body1" class="@((message?.SenderId == userId) ? "text-right" : "")">@message?.SenderUsername</MudText>
+                            <MudText Typo="Typo.caption" Style="font-size: xx-small!important;">@message?.DateTimeStamp</MudText>
+                            <MudText Typo="Typo.body2" Style="padding: 15px;background-color: var(--mud-palette-background-grey);border-radius: 5px;margin-top:5px">
+                                @message?.Message
+                            </MudText>
+                        </div>
+                        @if (message?.SenderId == userId)
+                        {
+                            <div class="ml-4">
+                                <MudAvatar Color="Color.Secondary" Style="height:50px; width:50px;">
+                                    <MudImage Src="@message?.SenderAvatar"></MudImage>
+                                </MudAvatar>
+                            </div>
+                        }
+                    </div>
+                }
+
+
+            </div>
+            <MudPaper Elevation="25" Class="d-flex flex-row px-2 mx-4" Style="position: fixed; bottom: 20px; width: 70%">
+                <MudTextField T="string"
+                              Placeholder="Enter your message..."
+                              DisableUnderLine="true"
+                              Class="mt-n2 mx-4 py-2"
+                              @bind-Value="messageInput"
+                              For="@(()=> messageInput)"
+                              AutoFocus />
+
+                <MudButton OnClick="Send"
+                           StartIcon="@Icons.Material.Outlined.Send"
+                           Color="Color.Secondary"
+                           ButtonType="ButtonType.Button">
+                    Send
+                </MudButton>
+            </MudPaper>
+
+        </MudContainer>
+
+    }
+    else
+    {
+        <p>Connecting...</p>
+    }
+</PageLayout>
+
+@code {
+    private HubConnection hubConnection;
+
+    int userId;
+    private string messageInput = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+
+        var token = await Local.GetItemAsStringAsync("token");
+        userId = int.Parse(Generics.GetClaimsFromToken(token!).Id!);
+        hubConnection = new HubConnectionBuilder()
+        .WithUrl(NavigationManager.ToAbsoluteUri("/chathub"))
+        .Build();
+
+        hubConnection.On<ChatMessageDTO>("ReceiveMessage", (message) =>
+        {
+            messages.Add(message);
+            StateHasChanged();
+        });
+
+        await hubConnection.StartAsync();
+    }
+    void Send()
+    {
+        hubConnection.SendAsync("SendMessage", userId, messageInput);
+        messageInput = "";
+    }
+
+    public bool IsConnected => hubConnection.State == HubConnectionState.Connected;
+}

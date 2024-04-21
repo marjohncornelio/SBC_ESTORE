@@ -1,0 +1,63 @@
+﻿using Microsoft.AspNetCore.Components;
+using MudBlazor;
+using SBC_ESTORE.Shared.DTO.Category;
+using SBC_ESTORE.Shared.DTO.Product;
+using System.Net.Http.Json;
+
+namespace SBC_ESTORE.Client.Services.CategoryServices
+{
+    public class ClientCategoryService : IClientCategoryService
+    {
+        private readonly HttpClient httpClient;
+        private readonly ISnackbar snackbar;
+        private readonly NavigationManager navigationManager;
+
+        public ClientCategoryService(HttpClient httpClient, ISnackbar snackbar, NavigationManager navigationManager)
+        {
+            this.httpClient = httpClient;
+            this.snackbar = snackbar;
+            this.navigationManager = navigationManager;
+        }
+
+        public async Task AddCategory(CategoryDTO category)
+        {
+            try
+            {
+                var response = await httpClient.PostAsJsonAsync("api/admin/category", category);
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadAsStringAsync();
+                    snackbar.Add(result, Severity.Success);
+                    navigationManager.NavigateTo("/admin/category");
+                }
+                else
+                {
+                    var result = await response.Content.ReadAsStringAsync();
+                    snackbar.Add(result, Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                snackbar.Add("An error occurred: " + ex.Message, Severity.Error);
+            }
+        }
+
+        public async Task<List<CategoryDTO>?> GetAllCategory()
+        {
+            try
+            {
+                var response = await httpClient.GetFromJsonAsync<List<CategoryDTO>>("api/admin/category");
+                if (response != null)
+                {
+                    return response;
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                snackbar.Add("An error occurred: " + ex.Message, Severity.Error);
+                return null;
+            }
+        }
+    }
+}

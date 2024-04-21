@@ -1,0 +1,177 @@
+﻿@page "/register"
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@inject IClientAuthService AuthService
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Register</PageTitle>
+<title>Register</title>
+
+<EditForm Model="registerUser" OnValidSubmit="HandleSubmit">
+    <MudCard Class="pa-10 m-auto" MaxWidth="500px">
+        <MudCardHeader Class="px-0">
+            <CardHeaderContent>
+                <MudText Typo="Typo.h5">Register</MudText>
+                @if (error != null)
+                {
+                    <MudPaper Class="my-2 py-2" Style="@($"color:{Colors.BlueGrey.Darken3}; background:{Colors.Grey.Lighten4};")" Elevation="0">
+                        <MudText Typo="Typo.subtitle1" Align="Align.Center"><em>@error</em></MudText>
+                    </MudPaper>
+                }
+            </CardHeaderContent>
+        </MudCardHeader>
+        <DataAnnotationsValidator />
+        <div class="d-flex justify-content-center row mt-5 position-relative">
+
+            <InputFile id="fileInput" OnChange="OnFileSelected" hidden />
+            <div class="d-flex justify-content-center row">
+                <div class="d-flex justify-content-center ">
+                    <MudButton HtmlTag="label" Style="border-radius: 100%;" for="fileInput">
+                        <MudAvatar style="width: 80px; height: 80px;">
+                            @if (!string.IsNullOrEmpty(registerUser.AvatarURL))
+                            {
+                                <MudImage Src="@registerUser.AvatarURL"></MudImage>
+                            }
+                            else
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Upload" />
+                            }
+                        </MudAvatar>
+                    </MudButton>
+                </div>
+                <MudText Typo="Typo.caption" Align="Align.Center"><strong>Profile Picture</strong></MudText>
+            </div>
+
+        </div>
+        <div>
+            <MudTextField @bind-Value="@registerUser.Name"
+                          Label="Name" Variant="Variant.Outlined"
+                          For="@(()=> registerUser.Name)"
+                          Class="mb-5"
+                          Required="true" />
+        </div>
+        <div>
+            <MudTextField @bind-Value="@registerUser.UserName"
+                          Label="UserName" Variant="Variant.Outlined"
+                          For="@(()=> registerUser.UserName)"
+                          Class="mb-5"
+                          Required="true" />
+        </div>
+        <div>
+            <MudTextField @bind-Value="@registerUser.PhoneNum"
+                          Label="Phone Number" Variant="Variant.Outlined"
+                          For="@(()=> registerUser.PhoneNum)"
+                          Class="mb-5"
+                          Required="true" />
+        </div>
+        <div>
+            <MudTextField @bind-Value="@registerUser.Email"
+                          Label="EmailAddress" Variant="Variant.Outlined"
+                          For="@(()=> registerUser.Email)"
+                          Class="mb-5"
+                          Required="true" />
+        </div>
+        <div>
+            <MudTextField @bind-Value="@registerUser.Password"
+                          InputType="@PasswordInput"
+                          Label="Password" Variant="Variant.Outlined"
+                          For="@(()=> registerUser.Password)"
+                          Class="mb-5"
+                          Required="true"
+                          Adornment="Adornment.End"
+                          AdornmentIcon="@PasswordInputIcon"
+                          OnAdornmentClick="ButtonTestclick"
+                          AdornmentAriaLabel="Show Password" />
+        </div>
+        <div>
+            <MudTextField @bind-Value="@registerUser.Address"
+                          Label="Address" Variant="Variant.Outlined"
+                          For="@(()=> registerUser.Address)"
+                          Class="mb-5"
+                          Required="true" />
+        </div>
+
+        <div class="d-grid gap-2 mt-3">
+            <button class="btn btn-primary" Type="submit" disabled="@isLoading">
+                @if (isLoading)
+                {
+                    <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true" />
+                }
+                else
+                {
+                    <MudText Typo="Typo.subtitle1">Register</MudText>
+                }
+            </button>
+        </div>
+        <div class="d-flex">
+            <MudText Typo="Typo.subtitle1">Already have an account? </MudText>
+            <MudText Typo="Typo.subtitle1" Class="ml-2"><a href="/login" style="color: deepskyblue">Login</a></MudText>
+        </div>
+    </MudCard>
+</EditForm>
+
+@code {
+    public UserDTO registerUser = new UserDTO();
+
+    private AuthenticationState? authenticationState;
+
+    protected override async Task OnInitializedAsync()
+    {
+        authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authenticationState.User?.Identity?.IsAuthenticated == true)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+    }
+
+    bool isLoading = false;
+    string? error = null;
+    bool isShow;
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    void ButtonTestclick()
+    {
+        @if (isShow)
+        {
+            isShow = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            isShow = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+
+    async Task HandleSubmit()
+    {
+        isLoading = true;
+        error = null;
+        var response = await AuthService.RegisterAccount(registerUser);
+        if (response != null)
+        {
+            error = response;
+        }
+        isLoading = false;
+
+    }
+
+    void Login()
+    {
+        NavigationManager.NavigateTo("/login");
+    }
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        var format = "image/png";
+        var resizedImage = await e.File.RequestImageFileAsync(format, 400, 400);
+        var buffer = new byte[resizedImage.Size];
+        await resizedImage.OpenReadStream().ReadAsync(buffer);
+        var imageData = $"data:{format}; base64, {Convert.ToBase64String(buffer)}";
+        registerUser.AvatarURL = imageData;
+    }
+
+}

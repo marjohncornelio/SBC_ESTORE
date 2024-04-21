@@ -1,0 +1,63 @@
+﻿@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<style>
+    .appBar {
+        background-color: #f7f7f7;
+        border-bottom: 1px solid #d6d5d5;
+        height: 3.5rem;
+        display: flex;
+    }
+</style>
+
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout Class="h-100">
+    <MudAppBar Style="z-index:100; padding: 0;" Class="appBar">
+        <AuthorizeView>
+            <MudTooltip Text="Menu" Arrow="true">
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" OnClick="@ToggleDrawer"></MudIconButton>
+            </MudTooltip>
+        </AuthorizeView>
+        <MudText Typo="Typo.h5" Align="Align.Center" Class="w-100" Color="Color.Dark">SBC-STORE</MudText>
+        <MudSpacer />
+    </MudAppBar>
+    <AuthorizeView>
+        <MudDrawer Id="drawer" Open="@_drawerOpen" PreserveOpenState="false" ClipMode="@DrawerClipMode.Never">
+            <NavMenu />
+        </MudDrawer>
+    </AuthorizeView>
+
+    <MudMainContent Class="h-100">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="h-100  w-100 p-3">
+            @ChildContent
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+
+@code {
+    private AuthenticationState? authenticationState;
+
+    protected override async Task OnInitializedAsync()
+    {
+        authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authenticationState.User?.Identity?.IsAuthenticated == false)
+        {
+            NavigationManager.NavigateTo("/login");
+        }
+    }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    bool _drawerOpen = true;
+
+    void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+}

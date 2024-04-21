@@ -1,0 +1,36 @@
+﻿
+<AuthorizeView>
+    <MudNavMenu Color="Color.Info" Bordered="true">
+        <MudDivider />
+        <!-- Navigation links -->
+        <MudNavLink Href="/" Match="NavLinkMatch.All">
+            <MudIcon Icon="@Icons.Material.Filled.Dashboard" /> Dashboard
+        </MudNavLink>
+        <MudNavLink Href="/chats" Match="NavLinkMatch.Prefix">
+            <MudIcon Icon="@Icons.Material.Filled.Chat" /> Chats
+        </MudNavLink>
+        <MudNavLink Href="/products" Match="NavLinkMatch.Prefix">
+            <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" /> Products
+        </MudNavLink>
+        <MudNavGroup Title="Inventory" Expanded="true">
+            <MudNavLink Href="/admin/products" Match="NavLinkMatch.Prefix">
+                <MudIcon Icon="@Icons.Material.Filled.Build" /> Inventory
+            </MudNavLink>
+            <MudNavLink Href="/about" Match="NavLinkMatch.Prefix">
+                <MudIcon Icon="@Icons.Material.Filled.ShoppingBasket" /> Orders
+            </MudNavLink>
+            <MudNavLink Href="/about" Match="NavLinkMatch.Prefix">
+                <MudIcon Icon="@Icons.Material.Filled.History" /> Order History
+            </MudNavLink>
+        </MudNavGroup>
+        <MudNavGroup Title="Settings" Expanded="true">
+            <MudNavLink Href="/users" Match="NavLinkMatch.Prefix">
+                <MudIcon Icon="@Icons.Material.Filled.Person" /> Users
+            </MudNavLink>
+            <MudNavLink Href="/security" Match="NavLinkMatch.Prefix">
+                <MudIcon Icon="@Icons.Material.Filled.Security" /> Security
+            </MudNavLink>
+        </MudNavGroup>
+    </MudNavMenu>
+</AuthorizeView>
+

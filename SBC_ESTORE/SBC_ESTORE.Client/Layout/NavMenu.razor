@@ -1,0 +1,110 @@
+﻿@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IClientUserService UserService
+@inject IClientAuthService AuthService
+
+<AuthorizeView>
+    <MudNavMenu Color="Color.Info" Bordered="true" Style="overflow: hidden; position: relative; height: 100vh">
+        <div class="mb-3">
+            <div class="d-flex justify-content-center row mt-5 position-relative">
+
+                <InputFile id="fileInput" OnChange="OnFileSelected" hidden />
+                <div class="d-flex justify-content-center">
+                    <MudButton HtmlTag="label" Style="border-radius: 100%;"
+                               for="fileInput">
+                        <MudAvatar style="width: 150px; height: 150px;">
+                            <MudImage Src="@AvatarUrl"></MudImage>
+                        </MudAvatar>
+                    </MudButton>
+                </div>
+
+                @if (context.User.IsInRole("SUPERUSER") || context.User.IsInRole("ADMIN"))
+                {
+                    <MudChip Class="position-absolute bottom-0" Style="width: auto" Color="Color.Primary">
+                        <MudText Typo="Typo.subtitle1" Style="font-size: 12px" Align="Align.Center"><em>@User.Role.ToString()</em></MudText>
+                    </MudChip>
+                }
+            </div>
+            <MudText Typo="Typo.h6" Align="Align.Center">@User.Name</MudText>
+            <MudText Typo="Typo.subtitle1" Style="font-size: 16px" Align="Align.Center">@User.UserName</MudText>
+        </div>
+        <MudDivider />
+ 
+
+        <MudNavLink Href="/" Match="NavLinkMatch.All" >
+            <MudIcon Icon="@Icons.Material.Outlined.Dashboard" Class="mr-2"/> Dashboard
+        </MudNavLink>
+        <MudNavLink Href="/chats" Match="NavLinkMatch.Prefix">
+            <MudIcon Icon="@Icons.Material.Outlined.Chat" Class="mr-2"/> Chats
+        </MudNavLink>
+        <MudNavLink Href="/products" Match="NavLinkMatch.Prefix">
+            <MudIcon Icon="@Icons.Material.Outlined.ShoppingCart" Class="mr-2"/> Products
+        </MudNavLink>
+        @if (context.User.IsInRole("SUPERUSER") || context.User.IsInRole("ADMIN"))
+        {
+            <MudNavLink Href="/orders" Match="NavLinkMatch.Prefix">
+                <MudIcon Icon="@Icons.Material.Outlined.ShoppingBag" Class="mr-2" /> Orders
+            </MudNavLink>
+            <MudNavGroup Title="Inventory" Expanded="true" Icon="@Icons.Material.Outlined.Inventory" Class="pl-3">
+                <MudNavLink Href="/admin/add-product" Match="NavLinkMatch.Prefix">Add Product</MudNavLink>
+                <MudNavLink Href="/admin/products" Match="NavLinkMatch.Prefix">Product List</MudNavLink>
+            </MudNavGroup>
+        }
+        @if (context.User.IsInRole("USER"))
+        {
+            <MudNavLink Href="/products" Match="NavLinkMatch.Prefix">
+                <MudIcon Icon="@Icons.Material.Outlined.History" Class="mr-2" /> Order History
+            </MudNavLink>
+        }
+        @if(context.User?.Identity?.IsAuthenticated == true)
+        {
+                <MudButton OnClick="HandleLogout" Style="position: absolute; bottom: 10px; width: 100%; diplay: block !important; text-transform: capitalize;">
+                    <MudIcon Icon="@Icons.Material.Outlined.Logout" Class="mr-2" /> Logout
+                </MudButton>
+        }
+    </MudNavMenu>
+</AuthorizeView>
+
+@code {
+
+    public UserSideBarDTO User = new UserSideBarDTO();
+    public string? AvatarUrl { get; set; }
+    public string? UserId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState token = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = token.User;
+        UserId = user.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value!;
+
+        var response = await UserService.GetUserInfoForSidebar(int.Parse(UserId));
+        if (response != null)
+        {
+            User = response;
+            AvatarUrl = response.AvatarURL;
+        }
+    }
+
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        var format = "image/png";
+        var resizedImage = await e.File.RequestImageFileAsync(format, 400, 400);
+        var buffer = new byte[resizedImage.Size];
+        await resizedImage.OpenReadStream().ReadAsync(buffer);
+        var imageData = $"data:{format}; base64, {Convert.ToBase64String(buffer)}";
+        AvatarUrl = imageData;
+
+        if (UserId != null && AvatarUrl != null)
+        {
+            await UserService.UploadAvatar(AvatarUrl, int.Parse(UserId));
+        }
+    }
+
+    async void HandleLogout()
+    {
+        await AuthService.LogoutAccount();
+    }
+
+}
