@@ -1,0 +1,93 @@
+﻿@page "/my-orders"
+@rendermode @(new InteractiveWebAssemblyRenderMode (prerender: false))
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IClientOrderService OrderService
+
+<PageTitle>My Orders</PageTitle>
+<title>My Orders</title>
+
+<PageLayout>
+    <MudText Typo="Typo.h6" Class="py-2 px-md-5">My Orders</MudText>
+
+    @if (isLoading)
+    {
+        <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mt-10"><em>Loading </em></MudText>
+    }
+    else if (orders.Count == 0 && !isLoading)
+    {
+        <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mt-10"><em>No Orders </em></MudText>
+    }
+    else
+    {
+        <MudPaper Width="100%" Elevation="0">
+        @foreach (var order in orders)
+        {
+
+                <MudContainer MaxWidth="MaxWidth.Medium">
+                        <MudCard Elevation="0">
+                        <MudCardHeader Class="d-flex justify-content-between" Style="@($" border: 2px solid {Colors.BlueGrey.Darken1}; ")">
+                            <div Class="d-flex gap-5">
+                                <div>
+                                    <MudText Typo="Typo.subtitle2">Order Number</MudText>
+                                    <MudText Typo="Typo.caption">@order.Id</MudText>
+                                </div>
+                                <div>
+                                    <MudText Typo="Typo.subtitle2">Date Ordered</MudText>
+                                    <MudText Typo="Typo.caption">@Helpers.ToLongDateString(order.DateOrdered)</MudText>
+                                </div>
+                                <div>
+                                    <MudText Typo="Typo.subtitle2">Total</MudText>
+                                    <MudText Typo="Typo.caption">@Helpers.FormatToPhilippinePeso(order.Total)</MudText>
+                                </div>
+                            </div>   
+                                <MudChip Text="green" Color="Color.Success">@order.Status</MudChip>
+
+                           </MudCardHeader>
+                           <MudCardContent>
+                                @foreach (var item in order.OrderItems)
+                                {
+                                <MudContainer Class="p-0 m-0">
+                                    <MudGrid Class="py-5 my-5">
+                                        <MudItem md="3">
+                                            <MudImage Src="@item.Product.ImageUrl" Class="w-100" Style="height: 150px" ObjectFit="ObjectFit.Contain"/>
+                                        </MudItem>
+                                        <MudItem md="9" Class="px-5">
+                                            <MudText Typo="Typo.subtitle2">@item.Product.Name</MudText>
+                                            <MudText Typo="Typo.subtitle1" Class="mt-4">Price: @Helpers.FormatToPhilippinePeso(item.Product.Price)</MudText>
+                                            <MudText Typo="Typo.subtitle1">Quantity: @item.Quantity</MudText>
+                                            <MudText Typo="Typo.subtitle1">Total: <span style="color: red">@Helpers.FormatToPhilippinePeso(item.Subtotal)</span></MudText>
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudContainer>
+                                }
+                           </MudCardContent>
+                        </MudCard>
+                   </MudContainer>
+
+        }
+        </MudPaper>
+    }
+
+</PageLayout>
+
+
+@code {
+    private List<OrderDTO> orders = new List<OrderDTO>();
+
+    bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState token = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = token.User;
+        string UserId = user.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value!;
+
+        isLoading = true;
+        var response = await OrderService.GetUserOrder(int.Parse(UserId));
+        if (response != null)
+            orders = response;
+        isLoading = false;
+    }
+
+
+}

@@ -34,7 +34,7 @@ namespace SBC_ESTORE.Client.Services.AuthServices
                 snackbar.Add("Login Successfully", Severity.Success);
                 var customAuthStateProvider = (CustomAuthenticationStateProvider)authenticationStateProvider;
                 await customAuthStateProvider.UpdateAuthenticationState(result);
-                navigationManager.NavigateTo("/");
+                navigationManager.NavigateTo("/chats");
                 return null;
             }
             else

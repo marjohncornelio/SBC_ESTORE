@@ -54,5 +54,41 @@ namespace SBC_ESTORE.Controllers
             }
         }
 
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteCategoryController(int Id)
+        {
+            var response = await categoryService.DeleteCategory(Id);
+
+            switch (response.ResponseCode)
+            {
+                case HttpStatusCode.OK:
+                    return Ok(response.Message);
+                case HttpStatusCode.NotFound:
+                    return NotFound(response.Message);
+                case HttpStatusCode.BadRequest:
+                    return BadRequest(response.Message);
+                default:
+                    return BadRequest("Error Occured, Try Again Later");
+            }
+        }
+
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult> UpdateCategoryController(int Id, CategoryDTO category)
+        {
+            var response = await categoryService.UpdateCategory(Id, category);
+
+            switch (response.ResponseCode)
+            {
+                case HttpStatusCode.OK:
+                    return Ok(response.Message);
+                case HttpStatusCode.NotFound:
+                    return NotFound(response.Message);
+                case HttpStatusCode.BadRequest:
+                    return BadRequest(response.Message);
+                default:
+                    return BadRequest("Error Occured, Try Again Later");
+            }
+        }
     }
 }

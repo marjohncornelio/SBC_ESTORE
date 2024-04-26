@@ -1,0 +1,124 @@
+﻿@page "/my-cart"
+@rendermode @(new InteractiveWebAssemblyRenderMode (prerender: false))
+@inject IClientCartService CartService
+@inject IClientOrderService OrderService
+@inject IClientUserService UserService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Cart</PageTitle>
+<title>Cart</title>
+
+<PageLayout>
+    <MudText Typo="Typo.h6" Class="py-2 px-md-5">My Cart</MudText>
+
+    @if (cartItems.Count == 0 && !isLoading)
+    {
+        <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mt-10"><em>No Item From Cart</em></MudText>
+    }
+    else
+    {
+        <MudTable 
+            @ref="table"
+            T="CartItemDTO"
+            Items="cartItems" 
+            Hover="true" 
+            Striped="true" 
+            Class="mb-3" 
+            Loading="@isLoading" 
+            Breakpoint="Breakpoint.Sm" 
+            Elevation="0"
+            MultiSelection="true" 
+            SelectedItems="selectedItems"
+            SelectedItemsChanged="OnSelectItem"
+                  OnRowClick="OnSelectItem"
+            RowClass="cursor-pointer">
+
+            <ColGroup>
+                <col />
+                <col style="width: 40%;" />
+                <col />
+                <col />
+                <col />
+            </ColGroup>
+            <HeaderContent>
+                <MudTh> Product </MudTh>
+                <MudTh> Quantity </MudTh>
+                <MudTh> Price </MudTh>
+                <MudTh> Subtotal </MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Product" Class="d-flex gap-3">
+                    <MudImage Src="@context.Product?.ImageUrl" Height="50"></MudImage>
+                    <MudText Typo="Typo.subtitle2">@context.Product?.Name</MudText>
+                </MudTd>
+                <MudTd DataLabel="Quantity">@context.Quantity</MudTd>
+                @if (context.Product?.Price >= 0)
+                {
+                    <MudTd DataLabel="Price">@Helpers.FormatToPhilippinePeso(context.Product.Price)</MudTd>
+                }
+                <MudTd DataLabel="Subtotal" Style="font-weight: 700">@Helpers.FormatToPhilippinePeso(context.Subtotal)</MudTd>
+            </RowTemplate>
+            <FooterContent >
+                <MudTd colSpan="2"></MudTd>
+                <MudTd>
+                    <MudButton OnClick="PlaceOrderHandler" Variant="Variant.Filled" Style="@($"color:{Colors.LightGreen.Accent3}; background:{Colors.BlueGrey.Darken4};")" Disabled="@(selectedItems.Count == 0 || addToCart)" >Place Order</MudButton>
+                </MudTd>
+                <MudTd>
+                    <MudText Typo="Typo.subtitle1" Style="font-weight: 700" Color="Color.Error">@Helpers.FormatToPhilippinePeso(Total)</MudText>
+                </MudTd>
+            </FooterContent>
+        </MudTable>
+    }
+
+</PageLayout>
+
+
+@code {
+    public List<CartItemDTO> cartItems = new List<CartItemDTO>();
+    private HashSet<CartItemDTO> selectedItems = new HashSet<CartItemDTO>();
+    private MudTable<CartItemDTO> table;
+
+    public float Total = 0;
+    public bool isLoading = false;
+    public string? UserId { get; set; }
+    bool addToCart = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+
+        AuthenticationState token = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = token.User;
+        UserId = user.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value!;
+
+        await LoadCartItem();
+    }
+
+    async Task LoadCartItem()
+    {
+        if (UserId != null)
+        {
+            var response = await CartService.GetItemsFromCart(int.Parse(UserId));
+            if (response != null)
+                cartItems = response;
+        }
+        isLoading = false;
+    }
+    void OnSelectItem()
+    {
+        Total = selectedItems.Sum(item => item.Subtotal);
+    }
+
+
+
+    async Task PlaceOrderHandler()
+    {
+
+        addToCart = true;
+        await OrderService.AddOrderFromCart(selectedItems, int.Parse(UserId), Total);
+        cartItems.RemoveAll(item => selectedItems.Contains(item));
+        StateHasChanged();
+        addToCart = false;
+    }
+
+}

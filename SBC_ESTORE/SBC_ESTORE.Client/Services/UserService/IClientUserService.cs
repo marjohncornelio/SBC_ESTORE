@@ -6,5 +6,12 @@ namespace SBC_ESTORE.Client.Services.UserService
     {
         Task<UserSideBarDTO?> GetUserInfoForSidebar(int id);
         Task UploadAvatar(string AvatarUrl, int id);
+        Task<UserDetailsDTO?> GetUserDetails(int Id);
+        Task<string?> UpdateUserDetails(UserDetailsDTO user, int Id);
+        Task<string?> ChangeUserPassword(ChangePasswordDTO password, int Id);
+
+        //Admin
+        Task<List<UserDetailsDTO>?> GetAllUsers();
+
     }
 }

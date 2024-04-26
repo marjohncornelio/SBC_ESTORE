@@ -1,0 +1,252 @@
+﻿@page "/account-settings"
+
+@rendermode @(new InteractiveWebAssemblyRenderMode (prerender: false))
+@inject IClientUserService UserService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Account Settings</PageTitle>
+<title>Account Settings</title>
+
+<PageLayout>
+    <MudText Typo="Typo.h6" Class="py-2 px-md-5">Account Settings</MudText>
+
+    <EditForm Model="User" OnValidSubmit="HandleSubmit" FormName="UserDetails">
+        <DataAnnotationsValidator />
+        <MudCard Class="pa-10 m-auto" Elevation="0" Style="max-width: 800px">
+            <MudCardHeader Class="px-0">
+                <CardHeaderContent>
+                    @if (error != null)
+                    {
+                        <MudPaper Class="my-2 py-2" Style="@($"color:{Colors.BlueGrey.Darken3}; background:{Colors.Grey.Lighten4};")" Elevation="0">
+                            <MudText Typo="Typo.subtitle1" Align="Align.Center"><em>@error</em></MudText>
+                        </MudPaper>
+                    }
+                </CardHeaderContent>
+            </MudCardHeader>
+            <div class="d-flex justify-content-center row mt-5 mb-5 position-relative">
+
+                <InputFile id="fileInput" OnChange="OnFileSelected" hidden />
+                <div class="d-flex justify-content-center row">
+                    <div class="d-flex justify-content-center ">
+                        <MudButton HtmlTag="label" Style="border-radius: 100%;" for="fileInput">
+                            <MudAvatar style="width: 150px; height: 150px;">
+                                @if (!string.IsNullOrEmpty(User.AvatarURL))
+                                {
+                                    <MudImage Src="@User.AvatarURL"></MudImage>
+                                }
+                                else
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.Upload" />
+                                }
+                            </MudAvatar>
+                        </MudButton>
+                    </div>
+                    <MudText Class="my-2" Typo="Typo.subtitle1" Align="Align.Center"><strong>Upload Profile</strong></MudText>
+                </div>
+
+            </div>
+            <div>
+                <MudTextField @bind-Value="@User.Name"
+                              Label="Name" Variant="Variant.Outlined"
+                              For="@(()=> User.Name)"
+                              Class="mb-5"
+                              Required="true" />
+            </div>
+            <div>
+                <MudTextField @bind-Value="@User.UserName"
+                              Label="UserName" Variant="Variant.Outlined"
+                              For="@(()=> User.UserName)"
+                              Class="mb-5"
+                              Required="true" />
+            </div>
+            <div>
+                <MudTextField @bind-Value="@User.PhoneNum"
+                              Label="Phone Number" Variant="Variant.Outlined"
+                              For="@(()=> User.PhoneNum)"
+                              Class="mb-5"
+                              Required="true" />
+            </div>
+            <div>
+                <MudTextField @bind-Value="@User.Email"
+                              Label="EmailAddress" Variant="Variant.Outlined"
+                              For="@(()=> User.Email)"
+                              Class="mb-5"
+                              Required="true" />
+            </div>
+            <div>
+            <MudTextField @bind-Value="@User.Address"
+                              Label="Address" Variant="Variant.Outlined"
+                              For="@(()=> User.Address)"
+                              Class="mb-5"
+                              Required="true" />
+            </div>
+
+            <div class="d-flex justify-center gap-2 mt-3">
+                <MudButton Class="px-10" ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color=Color.Primary  Disabled="@isLoading">
+                    @if (isLoading)
+                    {
+                        <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true" />
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.subtitle1">Save</MudText>
+                    }
+                </MudButton>
+            </div>
+        </MudCard>
+    </EditForm>
+
+
+    <EditForm Model="ChangedPassword" OnValidSubmit="HandleChangedPasswordSubmit" FormName="ChangedPassword">
+        <DataAnnotationsValidator />
+        <MudCard Class="pa-10 m-auto" Elevation="0" Style="max-width: 800px">
+            <MudText Typo="Typo.h6" Class="py-2">Change Password</MudText>
+
+            <MudCardHeader Class="px-0">
+                <CardHeaderContent>
+                    @if (passwordError != null)
+                    {
+                        <MudPaper Class="my-2 py-2" Style="@($"color:{Colors.BlueGrey.Darken3}; background:{Colors.Grey.Lighten4};")" Elevation="0">
+                            <MudText Typo="Typo.subtitle1" Align="Align.Center"><em>@passwordError</em></MudText>
+                        </MudPaper>
+                    }
+                </CardHeaderContent>
+            </MudCardHeader>
+            <div>
+                <MudTextField @bind-Value="@ChangedPassword.Password"
+                              Label="New Password" Variant="Variant.Outlined"
+                              For="@(()=> ChangedPassword.Password)"
+                              Class="mb-5"
+                              Required="true"
+                              Adornment="Adornment.End"
+                              AdornmentIcon="@PasswordInputIcon"
+                              OnAdornmentClick="ShowPassword"
+                              AdornmentAriaLabel="Show Password"
+                              InputType="@PasswordInput" />
+            </div>
+            <div>
+                <MudTextField @bind-Value="@ChangedPassword.ConfirmPassword"
+                              Label="Confirm Password" Variant="Variant.Outlined"
+                              For="@(()=> ChangedPassword.ConfirmPassword)"
+                              Class="mb-5"
+                              Required="true"
+                              Adornment="Adornment.End"
+                              AdornmentIcon="@ConfirmPasswordInputIcon"
+                              OnAdornmentClick="ShowConfirmPassword"
+                              AdornmentAriaLabel="Show Confirm Password"
+                              InputType="@ConfirmPasswordInput"/>
+            </div>
+
+            <div class="d-flex justify-center gap-2 mt-3">
+                <MudButton Class="px-10" ButtonType=ButtonType.Submit Variant="Variant.Filled" Color=Color.Primary Disabled="@passwordIsLoading">
+                    @if (passwordIsLoading)
+                    {
+                        <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true" />
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.subtitle1">Update Password</MudText>
+                    }
+                </MudButton>
+            </div>
+        </MudCard>
+    </EditForm>
+</PageLayout>
+
+@code {
+    public string? UserId { get; set; }
+    public UserDetailsDTO User = new UserDetailsDTO();
+    public ChangePasswordDTO ChangedPassword = new ChangePasswordDTO();
+    public bool isLoading = false;
+    public bool passwordIsLoading = false;
+    public string? error;
+    public string? passwordError;
+
+    //New Password
+    bool isShowPassword = false;
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    void ShowPassword()
+    {
+        @if (isShowPassword)
+        {
+            isShowPassword = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            isShowPassword = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+
+    //New Current Password
+    bool isShowConfirmPassword = false;
+    InputType ConfirmPasswordInput = InputType.Password;
+    string ConfirmPasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    void ShowConfirmPassword()
+    {
+        @if (isShowConfirmPassword)
+        {
+            isShowConfirmPassword = false;
+            ConfirmPasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            ConfirmPasswordInput = InputType.Password;
+        }
+        else
+        {
+            isShowConfirmPassword = true;
+            ConfirmPasswordInputIcon = Icons.Material.Filled.Visibility;
+            ConfirmPasswordInput = InputType.Text;
+        }
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState token = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = token.User;
+        UserId = user.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value!;
+
+        var response = await UserService.GetUserDetails(int.Parse(UserId));
+        if (response != null)
+            User = response;
+    }
+    async Task HandleSubmit()
+    {
+        isLoading = true;
+        error = null;
+        var response = await UserService.UpdateUserDetails(User, int.Parse(UserId));
+        if (response != null)
+        {
+            passwordError = response;
+        }
+        isLoading = false;
+
+    }
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        var format = "image/png";
+        var resizedImage = await e.File.RequestImageFileAsync(format, 400, 400);
+        var buffer = new byte[resizedImage.Size];
+        await resizedImage.OpenReadStream().ReadAsync(buffer);
+        var imageData = $"data:{format}; base64, {Convert.ToBase64String(buffer)}";
+        User.AvatarURL = imageData;
+    }
+
+    async Task HandleChangedPasswordSubmit()
+    {
+        passwordIsLoading = true;
+        error = null;
+        var response = await UserService.ChangeUserPassword(ChangedPassword, int.Parse(UserId));
+        if (response != null)
+        {
+            error = response;
+        }
+        passwordIsLoading = false;
+    }
+}

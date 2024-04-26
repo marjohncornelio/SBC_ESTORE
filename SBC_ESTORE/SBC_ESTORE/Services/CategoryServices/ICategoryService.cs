@@ -8,5 +8,8 @@ namespace SBC_ESTORE.Services.CategoryServices
     {
         Task<GeneralResponse> AddCategory(CategoryDTO category);
         Task<DataResponse<List<CategoryDTO>>> GetAllCategory();
+        Task<GeneralResponse> DeleteCategory(int Id);
+        Task<GeneralResponse> UpdateCategory(int Id, CategoryDTO category);
+
     }
 }

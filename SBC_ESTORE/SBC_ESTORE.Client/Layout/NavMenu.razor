@@ -5,66 +5,103 @@
 @inject IClientAuthService AuthService
 
 <AuthorizeView>
-    <MudNavMenu Color="Color.Info" Bordered="true" Style="overflow: hidden; position: relative; height: 100vh">
-        <div class="mb-3">
-            <div class="d-flex justify-content-center row mt-5 position-relative">
+    <MudNavMenu Color="Color.Success" Bordered="true" Style="overflow: hidden; position: relative; height: 100vh">
 
-                <InputFile id="fileInput" OnChange="OnFileSelected" hidden />
-                <div class="d-flex justify-content-center">
-                    <MudButton HtmlTag="label" Style="border-radius: 100%;"
-                               for="fileInput">
-                        <MudAvatar style="width: 150px; height: 150px;">
-                            <MudImage Src="@AvatarUrl"></MudImage>
-                        </MudAvatar>
-                    </MudButton>
-                </div>
+        <MudContainer Class="d-flex justify-center py-5">
+            <MudImage Src="./logo.png" Style="width: 100px; height: 100px;"></MudImage>
+        </MudContainer>
 
-                @if (context.User.IsInRole("SUPERUSER") || context.User.IsInRole("ADMIN"))
-                {
-                    <MudChip Class="position-absolute bottom-0" Style="width: auto" Color="Color.Primary">
-                        <MudText Typo="Typo.subtitle1" Style="font-size: 12px" Align="Align.Center"><em>@User.Role.ToString()</em></MudText>
-                    </MudChip>
-                }
+        <MudDivider />
+        <MudDivider />
+
+        <MudContainer class="d-flex py-5">
+            <MudContainer Class="m-0 p-0 w-auto">
+                <MudAvatar Style="width: 60px; height: 60px;" Elevation="2">
+                    <MudImage Src="@AvatarUrl"></MudImage>
+                </MudAvatar>
+            </MudContainer>
+
+
+            <MudContainer Class="m-0 p-0 d-flex row align-items-center ml-2">
+                <MudContainer Class="p-0 m-0">
+                    <MudText Typo="Typo.h6" Style="font-size: 15px; line-height: 15px">@Helpers.TruncateName(User.Name, 9)</MudText>
+                    @if (context.User.IsInRole("USER"))
+                    {
+                        <MudText Typo="Typo.subtitle1" Style="font-size: 14px">@User.UserName</MudText>
+                    }
+                    @if (context.User.IsInRole("SUPERUSER") || context.User.IsInRole("ADMIN"))
+                    {
+                        <div style="display: inline-block;">
+                            <MudText Typo="Typo.subtitle1" Style="font-size: 10px; border-radius: 3px;" Color="Color.Primary"><em>@User.Role.ToString()</em></MudText>
+                        </div>
+                    }
+                </MudContainer>
+            </MudContainer>
+            <div class="d-flex align-center">
+                <MudMenu Icon="@Icons.Material.Filled.Settings" Class="p-0 m-0 icon" AnchorOrigin="Origin.BottomRight">
+                    @if (context.User?.Identity?.IsAuthenticated == true)
+                    {
+                        <MudNavLink Href="/account-settings">
+                            Account Settings
+                        </MudNavLink>
+                    }
+                </MudMenu>
             </div>
-            <MudText Typo="Typo.h6" Align="Align.Center">@User.Name</MudText>
-            <MudText Typo="Typo.subtitle1" Style="font-size: 16px" Align="Align.Center">@User.UserName</MudText>
-        </div>
+        </MudContainer>
+       
         <MudDivider />
  
 
-        <MudNavLink Href="/" Match="NavLinkMatch.All" >
+@*         <MudNavLink Href="/" Match="NavLinkMatch.All" >
             <MudIcon Icon="@Icons.Material.Outlined.Dashboard" Class="mr-2"/> Dashboard
-        </MudNavLink>
+        </MudNavLink> *@
         <MudNavLink Href="/chats" Match="NavLinkMatch.Prefix">
             <MudIcon Icon="@Icons.Material.Outlined.Chat" Class="mr-2"/> Chats
         </MudNavLink>
         <MudNavLink Href="/products" Match="NavLinkMatch.Prefix">
-            <MudIcon Icon="@Icons.Material.Outlined.ShoppingCart" Class="mr-2"/> Products
+            <MudIcon Icon="@Icons.Material.Outlined.ShoppingBasket" Class="mr-2"/> Products
         </MudNavLink>
         @if (context.User.IsInRole("SUPERUSER") || context.User.IsInRole("ADMIN"))
         {
-            <MudNavLink Href="/orders" Match="NavLinkMatch.Prefix">
+            @* <MudNavLink Href="/sales" Match="NavLinkMatch.Prefix">
+                <MudIcon Icon="@Icons.Material.Outlined.Sell" Class="mr-2" /> Sales
+            </MudNavLink> *@
+            <MudNavLink Href="/admin/orders" Match="NavLinkMatch.Prefix">
                 <MudIcon Icon="@Icons.Material.Outlined.ShoppingBag" Class="mr-2" /> Orders
             </MudNavLink>
-            <MudNavGroup Title="Inventory" Expanded="true" Icon="@Icons.Material.Outlined.Inventory" Class="pl-3">
-                <MudNavLink Href="/admin/add-product" Match="NavLinkMatch.Prefix">Add Product</MudNavLink>
+            <MudNavGroup Title="Inventory" Icon="@Icons.Material.Outlined.Inventory" Class="pl-3">
+               <AuthorizeView Roles="SUPERUSER" Context="AddProduct">
+                    <MudNavLink Href="/admin/add-product" Match="NavLinkMatch.Prefix">Add Product</MudNavLink>
+               </AuthorizeView>
                 <MudNavLink Href="/admin/products" Match="NavLinkMatch.Prefix">Product List</MudNavLink>
             </MudNavGroup>
+            <MudNavGroup Title="Category" Icon="@Icons.Material.Filled.List" Class="pl-3">
+                <MudNavLink Href="/admin/category" Match="NavLinkMatch.Prefix">Category List</MudNavLink>
+            </MudNavGroup>
+            <MudNavLink Href="/admin/users" Match="NavLinkMatch.Prefix">
+                <MudIcon Icon="@Icons.Material.Outlined.People" Class="mr-2" /> Users
+            </MudNavLink>
         }
         @if (context.User.IsInRole("USER"))
         {
-            <MudNavLink Href="/products" Match="NavLinkMatch.Prefix">
+            <MudNavLink Href="/my-orders" Match="NavLinkMatch.Prefix">
                 <MudIcon Icon="@Icons.Material.Outlined.History" Class="mr-2" /> Order History
             </MudNavLink>
         }
         @if(context.User?.Identity?.IsAuthenticated == true)
         {
-                <MudButton OnClick="HandleLogout" Style="position: absolute; bottom: 10px; width: 100%; diplay: block !important; text-transform: capitalize;">
+                <MudNavLink OnClick="HandleLogout" Style="position: absolute; bottom: 10px">
                     <MudIcon Icon="@Icons.Material.Outlined.Logout" Class="mr-2" /> Logout
-                </MudButton>
+                </MudNavLink>
         }
     </MudNavMenu>
 </AuthorizeView>
+
+<style>
+    .icon > *{
+        padding: 0
+    }
+</style>
 
 @code {
 
@@ -74,9 +111,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        AuthenticationState token = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = token.User;
-        UserId = user.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value!;
+        AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        UserId = state.User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value!;
 
         var response = await UserService.GetUserInfoForSidebar(int.Parse(UserId));
         if (response != null)

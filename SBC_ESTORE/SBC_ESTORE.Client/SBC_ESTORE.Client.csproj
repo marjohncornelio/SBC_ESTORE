@@ -21,8 +21,4 @@
     <ProjectReference Include="..\..\SBC_ESTORE.Shared\SBC_ESTORE.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Pages\Admin\Orders\" />
-  </ItemGroup>
-
 </Project>

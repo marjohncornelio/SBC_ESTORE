@@ -1,4 +1,5 @@
-﻿using SBC_ESTORE.Shared.Enum;
+﻿using SBC_ESTORE.Shared.DTO.Cart;
+using SBC_ESTORE.Shared.Enum;
 
 namespace SBC_ESTORE.Shared.DTO.User
 {
@@ -9,5 +10,6 @@ namespace SBC_ESTORE.Shared.DTO.User
         public string UserName { get; set; } = string.Empty;
         public AccountRoles Role { get; set; }
         public string AvatarURL { get; set; } = string.Empty;
+        public CartDTO? Cart { get; set; }
     }
 }

@@ -26,13 +26,27 @@
     }
     else
     {
-        <MudTable Items="products" Hover="true" Striped="true" Class="mb-3" Loading="@isLoading">
+        <MudTable Items="products" 
+                  Hover="true"
+                  Striped="true"
+                  Class="mb-3"
+                  Loading="@isLoading"
+                  Breakpoint="Breakpoint.Sm"
+                  Elevation="0" >
+            <ColGroup>
+                <col />
+                <col style="width: 30%;" />
+                <col />
+                <col />
+            </ColGroup>
             <HeaderContent>
                 <MudTh> Image </MudTh>
                 <MudTh> Name </MudTh>
                 <MudTh> Price </MudTh>
                 <MudTh> Quantity </MudTh>
-                <MudTh colSpan="2"> Action </MudTh>
+                <AuthorizeView Roles="SUPERUSER">
+                    <MudTh colSpan="2"> Action </MudTh>
+                </AuthorizeView>
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Image">
@@ -41,22 +55,27 @@
                 <MudTd DataLabel="Title">@Helpers.TruncateString(context.Name, 80)</MudTd>
                 <MudTd DataLabel="Publisher">@Helpers.FormatToPhilippinePeso(context.Price)</MudTd>
                 <MudTd DataLabel="Release Year">@context.Quantity</MudTd>
-                <MudTd DataLabel="Edit">
-                    <MudButton OnClick="() => EditProduct(context.Id)"
-                               StartIcon="@Icons.Material.Filled.Edit"
-                               Color="Color.Primary"
-                               Variant="Variant.Filled">
-                        Edit
-                    </MudButton>
-                </MudTd>
-                <MudTd DataLabel="Delete">
-                    <MudButton OnClick="() => DeleteProduct(context.Id)"
-                               StartIcon="@Icons.Material.Filled.Delete"
-                               Color="Color.Error"
-                               Variant="Variant.Filled">
-                        Delete
-                    </MudButton>
-                </MudTd>
+                <AuthorizeView Roles="SUPERUSER" Context="Auth">
+                    <Authorized>
+                        <MudTd DataLabel="Action">
+                            <MudButton OnClick="() => EditProduct(context.Id)"
+                                       StartIcon="@Icons.Material.Filled.Edit"
+                                       Color="Color.Primary"
+                                       Variant="Variant.Filled">
+                                Edit
+                            </MudButton>
+                            <MudButton OnClick="() => DeleteProduct(context.Id)"
+                                       StartIcon="@Icons.Material.Filled.Delete"
+                                       Color="Color.Error"
+                                       Variant="Variant.Filled">
+                                Delete
+                            </MudButton>
+                        </MudTd>
+                    </Authorized>
+                    <NotAuthorized>
+                        <MudTh></MudTh>
+                    </NotAuthorized>
+                </AuthorizeView>
             </RowTemplate>
         </MudTable>
     }

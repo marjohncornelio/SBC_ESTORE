@@ -20,5 +20,6 @@ namespace SBC_ESTORE.Shared.DTO.Product
         public int CategoryId { get; set; }
         [ForeignKey("CategoryId")]
         public CategoryDTO? ProductCategory { get; set; }
+
     }
 }

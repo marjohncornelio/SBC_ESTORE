@@ -49,6 +49,18 @@ namespace SBC_ESTORE.Services.AuthServices
             var saveUser = await context.SaveChangesAsync();
             if (saveUser == 0)
                 return new GeneralResponse("Error occured. Try again later...", HttpStatusCode.BadRequest);
+
+            Cart UserCart = new Cart()
+            {
+                UserId = user.Id,
+                User = user,
+            };
+
+            context.Carts.Add(UserCart);
+            var saveUserCart = await context.SaveChangesAsync();
+            if (saveUserCart == 0)
+                return new GeneralResponse("Error occured. Try again later...", HttpStatusCode.BadRequest);
+
             return new GeneralResponse("User Added Succesfully", HttpStatusCode.OK);
         }
 

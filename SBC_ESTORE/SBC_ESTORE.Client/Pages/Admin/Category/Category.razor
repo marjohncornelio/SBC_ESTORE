@@ -1,0 +1,119 @@
+﻿@page "/admin/category"
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender : false))
+@inject IClientCategoryService CategoryService
+@inject IDialogService DialogService
+
+<PageTitle>Categories</PageTitle>
+<title>Categories</title>
+
+<PageLayout>
+    <AuthorizeView Roles="SUPERUSER, ADMIN" Context="Parent">
+        <Authorized>
+            <MudPaper Class="d-flex justify-space-between mb-5 px-2" Outlined="false" Elevation="0">
+            <MudText Typo="Typo.h6" Class="py-2 px-md-5">Categories</MudText>
+            <AuthorizeView Roles="SUPERUSER" Context="Add">
+                <MudButton OnClick="AddCategory"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           Color="Color.Success"
+                           Variant="Variant.Filled"
+                           Size="Size.Small">
+                    Add New Category
+                </MudButton>
+            </AuthorizeView>
+        </MudPaper>
+    
+    <MudTable Items="categories"
+              Hover="true"
+              Striped="true"
+              Class="mb-3"
+              Loading="@isLoading"
+              Breakpoint="Breakpoint.Sm"
+              Elevation="0"
+             >
+        <HeaderContent>
+            <MudTh> Name </MudTh>
+             <AuthorizeView Roles="SUPERUSER" Context="Auth">
+                        <MudTh colSpan="2"> Action </MudTh>
+             </AuthorizeView>
+        </HeaderContent>
+                <RowTemplate Context="Table">
+            <MudTd DataLabel="Name">@Table.Name</MudTd>
+            <AuthorizeView Roles="SUPERUSER" Context="Auth">
+                    <MudTd DataLabel="Action">
+                        <MudButton OnClick="() => EditCategory(Table)"
+                                   StartIcon="@Icons.Material.Filled.Edit"
+                                   Color="Color.Primary"
+                                   Variant="Variant.Filled">
+                            Edit
+                        </MudButton>
+                        <MudButton OnClick="() => DeleteCategory(Table.Id)"
+                                   StartIcon="@Icons.Material.Filled.Delete"
+                                   Color="Color.Error"
+                                   Variant="Variant.Filled">
+                            Delete
+                        </MudButton>
+                    </MudTd>
+            </AuthorizeView>
+        </RowTemplate>
+    </MudTable>
+        
+        </Authorized>
+        <NotAuthorized>
+            <Forbidden />
+        </NotAuthorized>
+    </AuthorizeView>
+    
+
+</PageLayout>
+
+@code {
+    private List<CategoryDTO> categories = new List<CategoryDTO>();
+    bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        await LoadCategory();
+    }
+
+    async Task LoadCategory()
+    {
+        var response = await CategoryService.GetAllCategory();
+        if (response != null)
+            categories = response;
+        isLoading = false;
+    }
+
+    async Task EditCategory(CategoryDTO cat)
+    {
+        var parameters = new DialogParameters
+            {
+                ["IsEdit"] = true,
+                ["Category"] = cat
+            };
+
+        var dialog = await DialogService.ShowAsync<CategoryDialog>("Edit Category", parameters);
+        var result = await dialog.Result;
+    }
+
+    async Task AddCategory()
+    {
+        var parameters = new DialogParameters
+            {
+                ["IsEdit"] = false,
+                ["Category"] = new CategoryDTO()
+            };
+
+        var dialog = await DialogService.ShowAsync<CategoryDialog>("Add Category", parameters);
+        var result = await dialog.Result;
+        await LoadCategory();
+    }
+
+    async void DeleteCategory(int Id)
+    {
+        await CategoryService.DeleteCategory((int)Id);
+        var itemToRemove = categories.Find(c => c.Id == Id);
+        categories.Remove(itemToRemove);
+        StateHasChanged();
+    }
+}

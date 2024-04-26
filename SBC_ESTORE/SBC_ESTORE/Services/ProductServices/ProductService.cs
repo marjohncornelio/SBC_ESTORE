@@ -36,7 +36,7 @@ namespace SBC_ESTORE.Services.ProductServices
             var newProduct = new Product
             {
                 Name = product.Name,
-                Description = product.Description,
+                Description = product.Description,  
                 Price = product.Price,
                 Quantity = product.Quantity,
                 ImageUrl = product.ImageUrl,
@@ -45,7 +45,7 @@ namespace SBC_ESTORE.Services.ProductServices
 
             context.Products.Add(newProduct);
             await context.SaveChangesAsync();
-            return new GeneralResponse("Category is successfully Added");
+            return new GeneralResponse("Product is successfully Added");
         }
 
         public async Task<GeneralResponse> DeleteProduct(int Id)
@@ -74,7 +74,7 @@ namespace SBC_ESTORE.Services.ProductServices
                 ImageUrl = p.ImageUrl,
                 CategoryId = p.CategoryId,
             }).ToList();
-            return new DataResponse<List<ProductDTO>>(productList, "Poducts Fetched");
+            return new DataResponse<List<ProductDTO>>(productList, "Products Fetched");
         }
 
         public async Task<DataResponse<ProductDTO>> GetProductById(int Id)
@@ -97,7 +97,7 @@ namespace SBC_ESTORE.Services.ProductServices
 
             var productDTO = new ProductDTO
             {
-                Id = product.Id,
+                Id = product!.Id,
                 Name = product.Name,
                 Description = product.Description,
                 Price = product.Price,

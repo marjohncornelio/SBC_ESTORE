@@ -15,5 +15,9 @@ namespace SBC_ESTORE.Models
         public string UserName { get; set; } = string.Empty;
         public string PhoneNum { get; set; } = string.Empty;
         public string Address { get; set; } = string.Empty;
+        public List<ChatMessage>? ChatMessages {get; set;}
+        public Cart Cart { get; set; }
+        public List<Order>? Order { get; set; }
+
     }
 }

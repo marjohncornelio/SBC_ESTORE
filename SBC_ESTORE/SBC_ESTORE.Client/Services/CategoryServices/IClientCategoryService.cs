@@ -6,5 +6,9 @@ namespace SBC_ESTORE.Client.Services.CategoryServices
     {
         Task AddCategory(CategoryDTO category);
         Task<List<CategoryDTO>?> GetAllCategory();
+        Task DeleteCategory(int Id);
+        Task UpdateCategory(int Id, CategoryDTO category);
+
+
     }
 }

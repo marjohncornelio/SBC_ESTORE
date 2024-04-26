@@ -1,40 +1,44 @@
 ﻿@page "/chats"
 @rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IClientChatMessageService ChatMessageService
+@inject ISnackbar Snackbar
 
 <PageTitle>Chats</PageTitle>
 <title>Chats</title>
 
 <PageLayout>
-    <MudText Typo="Typo.h6" Class="py-2 px-md-5">Chats</MudText>
 
-    @if (IsConnected)
+
+    @if (hubConnection != null && IsConnected)
     {
+        <MudText Typo="Typo.h6" Class="py-2 px-md-5">Chats</MudText>
         <MudContainer Class="position-relative">
             <div class="d-flex flex-column px-4" style="min-height: 70vh; padding-bottom: 50px" id="chatContainer">
                 @foreach (var message in messages)
                 {
-                    <div class="d-flex flex-row my-4 @((message?.SenderId == userId) ? "justify-content-end" : "")">
-                        @if (message?.SenderId != userId)
+                    <div class="d-flex flex-row my-4 @((message?.User?.Id == UserId) ? "justify-content-end" : "")">
+                        @if (message?.User?.Id != UserId)
                         {
                             <div class="mr-4">
                                 <MudAvatar Color="Color.Secondary" Style="height:50px; width:50px;">
-                                    <MudImage Src="@message?.SenderAvatar"></MudImage>
+                                    <MudImage Src="@message?.User?.AvatarURL"></MudImage>
                                 </MudAvatar>
                             </div>
                         }
-                        <div class="@((message?.SenderId == userId) ? "text-end ml-4" : "")">
-                            <MudText Typo="Typo.body1" class="@((message?.SenderId == userId) ? "text-right" : "")">@message?.SenderUsername</MudText>
-                            <MudText Typo="Typo.caption" Style="font-size: xx-small!important;">@message?.DateTimeStamp</MudText>
-                            <MudText Typo="Typo.body2" Style="padding: 15px;background-color: var(--mud-palette-background-grey);border-radius: 5px;margin-top:5px">
-                                @message?.Message
+                        <div class="@((message?.User?.Id == UserId) ? "text-end ml-4" : "")">
+                            <MudText Typo="Typo.body1" class="@((message?.User?.Id == UserId) ? "text-right" : "")">@message?.User?.UserName</MudText>
+                            <MudText Typo="Typo.body2" Style="padding: 15px;background-color: var(--mud-palette-background-grey);border-radius: 5px;margin-top:5px;">
+                                @message?.Content
                             </MudText>
+                            <MudText Typo="Typo.caption" Style="font-size: xx-small!important;">@message?.TimeStamp</MudText>
                         </div>
-                        @if (message?.SenderId == userId)
+                        @if (message?.User?.Id == UserId)
                         {
                             <div class="ml-4">
                                 <MudAvatar Color="Color.Secondary" Style="height:50px; width:50px;">
-                                    <MudImage Src="@message?.SenderAvatar"></MudImage>
+                                    <MudImage Src="@message?.User?.AvatarURL"></MudImage>
                                 </MudAvatar>
                             </div>
                         }
@@ -43,7 +47,7 @@
 
 
             </div>
-            <MudPaper Elevation="25" Class="d-flex flex-row px-2 mx-4" Style="position: fixed; bottom: 20px; width: 70%">
+            <MudPaper Elevation="25" Class="d-flex flex-row px-2 mx-4" Style="position: fixed; bottom: 20px; width: 75%">
                 <MudTextField T="string"
                               Placeholder="Enter your message..."
                               DisableUnderLine="true"
@@ -55,7 +59,8 @@
                 <MudButton OnClick="Send"
                            StartIcon="@Icons.Material.Outlined.Send"
                            Color="Color.Secondary"
-                           ButtonType="ButtonType.Button">
+                           ButtonType="ButtonType.Button"
+                           >
                     Send
                 </MudButton>
             </MudPaper>
@@ -65,29 +70,37 @@
     }
     else
     {
-        <p>Connecting...</p>
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="m-0" />
     }
 </PageLayout>
 
 @code {
     private HubConnection hubConnection;
 
-    int userId;
+    int UserId;
     private string messageInput = string.Empty;
+    public List<ChatMessageDTO> messages = new List<ChatMessageDTO>();
 
     protected override async Task OnInitializedAsync()
     {
+        AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        UserId = int.Parse(state.User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value!);
 
+        var chatMessages = await ChatMessageService.GetAllMessages();
+        if (chatMessages != null)
+            messages = chatMessages;
 
-        var token = await Local.GetItemAsStringAsync("token");
-        userId = int.Parse(Generics.GetClaimsFromToken(token!).Id!);
         hubConnection = new HubConnectionBuilder()
         .WithUrl(NavigationManager.ToAbsoluteUri("/chathub"))
         .Build();
 
-        hubConnection.On<ChatMessageDTO>("ReceiveMessage", (message) =>
+        hubConnection.On<ChatMessageDTO>("ReceiveMessage", message =>
         {
             messages.Add(message);
+            if (message.User.Id != UserId)
+            {
+                Snackbar.Add("New Message", Severity.Info);
+            }
             StateHasChanged();
         });
 
@@ -95,8 +108,11 @@
     }
     void Send()
     {
-        hubConnection.SendAsync("SendMessage", userId, messageInput);
-        messageInput = "";
+        if (!string.IsNullOrEmpty(messageInput))
+        {
+            hubConnection.SendAsync("SendMessage", UserId, messageInput);
+            messageInput = "";
+        }
     }
 
     public bool IsConnected => hubConnection.State == HubConnectionState.Connected;

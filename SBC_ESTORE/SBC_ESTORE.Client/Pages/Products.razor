@@ -1,6 +1,7 @@
 ﻿@page "/products"
 @rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
 @inject IClientProductService ProductService
+@inject NavigationManager NavigationManager
 <PageTitle>All Products</PageTitle>
 <title>All Products</title>
 
@@ -9,7 +10,27 @@
         <MudText Typo="Typo.h6" Class="py-2 px-md-5">All Products</MudText>
     </MudPaper>
 
-@if (products.Count == 0 && !isLoading)
+
+@if(isLoading)
+{
+
+            <MudGrid Class="px-2">
+              @for (int i = 0; i < 12; i++)
+                {
+                    <MudItem lg="3" md="4" sm="6" xs="12">
+                        <MudCard>
+                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="200px"/>
+                            <MudCardContent Class="m-0">
+                                <MudSkeleton Width="30%" Height="42px;" />
+                                <MudSkeleton Width="80%" />
+                                <MudSkeleton Width="100%" />
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                }
+            </MudGrid>
+}
+else if(products.Count == 0 && !isLoading)
 {
     <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mt-10"><em>No Product</em></MudText>
 }
@@ -17,19 +38,19 @@ else
 {
     <MudGrid Class="px-2">
         @foreach (var product in products)
-        {
+        { 
             <MudItem lg="3" md="4" sm="6" xs="12">
-                <MudCard Style="position: relative;">
+                    <MudCard Style="position: relative; cursor: pointer; height: 100%   " Class="mud-card-hover" @onclick="@(() => ProductOverview(product.Id))">
                     @if (product.Quantity <= 0)
                     {
                         <MudOverlay Visible="true" DarkBackground="true" Absolute="true">
                             <MudText Align="Align.Center" Typo="Typo.h6" Class="text-uppercase" Style="@($"color:{Colors.BlueGrey.Lighten5}")">Out Of Stock</MudText>
                         </MudOverlay>
                     }
-                    <MudContainer>
-                        <MudImage Src="@(string.IsNullOrEmpty(product.ImageUrl) ? "./logo.png" : product.ImageUrl)" ObjectFit="ObjectFit.Contain" Style="height: 200px; width: 100%"></MudImage>
+                    <MudContainer Class="p-0">
+                        <MudImage Src="@(string.IsNullOrEmpty(product.ImageUrl) ? "./logo.png" : product.ImageUrl)" ObjectFit="ObjectFit.Cover" Style="height: 200px; width: 100%"></MudImage>
                     </MudContainer>
-                    <MudCardContent Style="height: 100px">
+                    <MudCardContent>
                         <div class="d-flex justify-content-between pb-2">
                             <MudText Typo="Typo.h6" Style="font-size: 16px !important">@Helpers.TruncateString(product.Name, 25)</MudText>
                             <MudText Typo="Typo.h6" Color="Color.Error">@Helpers.FormatToPhilippinePeso(product.Price)</MudText>
@@ -37,9 +58,6 @@ else
 
                         <MudText Typo="Typo.caption" Class="truncate" Align="Align.Justify">@Helpers.TruncateString(product.Description, 100)</MudText>
                     </MudCardContent>
-                    <MudCardActions Class="d-flex justify-center p-3 pt-0">
-                        <MudButton StartIcon="@Icons.Material.Outlined.ShoppingCart" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Class="py-2 rounded-lg" FullWidth>Add to Cart</MudButton>
-                    </MudCardActions>
                 </MudCard>
             </MudItem>
         }
@@ -48,12 +66,23 @@ else
 }
 </PageLayout>
 
+<style>
+    .mud-card-hover {
+        transition: transform 0.3s ease;
+    }
+
+    .mud-card-hover:hover {
+       transform: scale(1.05);
+    }
+</style>
+
 @code {
     List<ProductDTO> products = new List<ProductDTO>();
     public bool isLoading = false;
 
     protected override async Task OnInitializedAsync()
     {
+        isLoading = true;
         await LoadProduct();
     }
 
@@ -62,6 +91,11 @@ else
         var response = await ProductService.GetAllProducts();
         if (response != null)
             products = response;
+        isLoading = false;
     }
 
+    void ProductOverview(int Id)
+    {
+        NavigationManager.NavigateTo($"/products/{Id}");
+    }
 }

@@ -49,5 +49,28 @@ namespace SBC_ESTORE.Services.CategoryServices
             return new DataResponse<List<CategoryDTO>>(categories, "Category Fetched");
 
         }
+        public async Task<GeneralResponse> DeleteCategory(int Id)
+        {
+            var response = await context.Categories.FirstOrDefaultAsync(c => c.Id == Id);
+            if (response == null)
+                return new GeneralResponse("No existing category", HttpStatusCode.NotFound);
+
+            context.Categories.Remove(response);
+            await context.SaveChangesAsync();
+            
+            return new GeneralResponse("Category Deleted");
+        }
+        public async Task<GeneralResponse> UpdateCategory(int Id, CategoryDTO category)
+        {
+            var response = await context.Categories.FirstOrDefaultAsync(c => c.Id == Id);
+            if (response == null)
+                return new GeneralResponse("No existing category", HttpStatusCode.NotFound);
+
+            response.Name = category.Name;
+            await context.SaveChangesAsync();
+
+            return new GeneralResponse("Category Updated");
+        }
+
     }
 }

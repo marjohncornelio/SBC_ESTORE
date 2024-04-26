@@ -59,5 +59,52 @@ namespace SBC_ESTORE.Client.Services.CategoryServices
                 return null;
             }
         }
+
+        public async Task DeleteCategory(int Id)
+        {
+            try
+            {
+                var response = await httpClient.DeleteAsync($"api/admin/category/{Id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadAsStringAsync();
+                    snackbar.Add(result, Severity.Success);
+                    navigationManager.NavigateTo("/admin/category");
+                }
+                else
+                {
+                    var result = await response.Content.ReadAsStringAsync();
+                    snackbar.Add(result, Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                snackbar.Add("An error occurred: " + ex.Message, Severity.Error);
+            }
+        }
+
+        public async Task UpdateCategory(int Id, CategoryDTO category)
+        {
+            try
+            {
+                var response = await httpClient.PutAsJsonAsync($"api/admin/category/{Id}", category);
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadAsStringAsync();
+                    snackbar.Add(result, Severity.Success);
+                    navigationManager.NavigateTo("/admin/category");
+                }
+                else
+                {
+                    var result = await response.Content.ReadAsStringAsync();
+                    snackbar.Add(result, Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                snackbar.Add("An error occurred: " + ex.Message, Severity.Error);
+            }
+        }
+
     }
 }

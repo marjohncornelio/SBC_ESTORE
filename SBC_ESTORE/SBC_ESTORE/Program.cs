@@ -15,14 +15,20 @@ using SBC_ESTORE.Authentication;
 using SBC_ESTORE.Services.CategoryServices;
 using SBC_ESTORE.Services.ProductServices;
 using SBC_ESTORE.Hubs;
+using SBC_ESTORE.Services.ChatMessageService;
+using SBC_ESTORE.Services.CartServices;
+using SBC_ESTORE.Services.OrderServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
 
+//SignalR
+builder.Services.AddSignalR();
+
+//Controllers
 builder.Services.AddControllers();
 
 //HttpContextAccessor
@@ -30,9 +36,6 @@ builder.Services.AddHttpContextAccessor();
 
 //MudBlazor
 builder.Services.AddMudServices();
-
-//SignalR
-builder.Services.AddSignalR();
 
 //Swagger UI for Header Bearer Authenticaiton
 builder.Services.AddSwaggerGen(options =>
@@ -50,7 +53,7 @@ builder.Services.AddSwaggerGen(options =>
 //DbContext
 builder.Services.AddDbContext<DataContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("Connection"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
 //Jwt Auth
@@ -77,6 +80,9 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IChatMessageService, ChatMessageService>();
+builder.Services.AddScoped<ICartService, Cartservice>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 var app = builder.Build();
 
@@ -101,7 +107,6 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(SBC_ESTORE.Client._Imports).Assembly);
 app.MapControllers();

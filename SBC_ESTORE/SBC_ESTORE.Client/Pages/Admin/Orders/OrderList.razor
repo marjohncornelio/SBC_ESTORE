@@ -1,0 +1,75 @@
+﻿@page "/admin/orders"
+
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@inject IClientOrderService Orderservice
+
+<PageTitle>Orders</PageTitle>
+<title>Orders</title>
+
+<PageLayout>
+    <MudText Typo="Typo.h6" Class="py-2 px-md-5">Order List</MudText>
+
+    <MudDataGrid Items="@customersOrder" ReadOnly Loading=isLoading Hover Class="mx-4" Elevation="0" Striped>
+        <Columns>
+            <HierarchyColumn T="OrderDTO" />
+            <PropertyColumn Property="x => x.Id" Title="Order No." />
+            <PropertyColumn Property="x => x.User.Name" Title="Customer Name" />
+            <PropertyColumn Property="x => Helpers.ToLongDateString(x.DateOrdered)" Title="Date Ordered" />
+            <PropertyColumn Property="x => Helpers.FormatToPhilippinePeso(x.Total)" Title="Total" />
+            <PropertyColumn Property="x => x.Status" Title="Status" CellStyleFunc="@_cellStyleFunc" />
+        </Columns>
+        <ChildRowContent>
+            <MudCard>
+                <MudCardContent>
+                    @foreach (var item in context.Item.OrderItems)
+                    {
+                        <MudContainer Class="p-0 m-0">
+                            <MudGrid Class="py-3 my-3">
+                                <MudItem md="3">
+                                    <MudImage Src="@item.Product.ImageUrl" Class="w-100" Style="height: 120px" ObjectFit="ObjectFit.Contain" />
+                                </MudItem>
+                                <MudItem md="9" Class="px-3">
+                                    <MudText Typo="Typo.subtitle2">@item.Product.Name</MudText>
+                                    <MudText Typo="Typo.subtitle1" Class="mt-4">Price: @Helpers.FormatToPhilippinePeso(item.Product.Price)</MudText>
+                                    <MudText Typo="Typo.subtitle1">Quantity: @item.Quantity</MudText>
+                                    <MudText Typo="Typo.subtitle1">Total: <span style="color: red">@Helpers.FormatToPhilippinePeso(item.Subtotal)</span></MudText>
+                                </MudItem>
+                            </MudGrid>
+                        </MudContainer>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </ChildRowContent>
+        <PagerContent>
+            <MudDataGridPager T="OrderDTO" />
+        </PagerContent>
+    </MudDataGrid>
+</PageLayout>
+
+
+@code {
+    private List<OrderDTO> customersOrder = new List<OrderDTO>();
+    bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        var response = await Orderservice.GetAllCustomerOrders();
+        if (response != null)
+            customersOrder = response;
+
+        isLoading = false;
+    }
+
+    //Status Cell Style
+    private Func<OrderDTO, string> _cellStyleFunc => x =>
+    {
+        string style = "";
+
+        if (x.Status.ToString() == "PENDING")
+            style += "background-color:#8CED8C; text-align: center;";
+
+        return style;
+    };
+
+}

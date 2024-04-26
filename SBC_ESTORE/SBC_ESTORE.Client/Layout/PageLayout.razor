@@ -16,17 +16,24 @@
 <MudSnackbarProvider />
 
 <MudLayout Class="h-100">
-    <MudAppBar Style="z-index:100; padding: 0;" Class="appBar">
+    <MudAppBar Style="@($"color:{Colors.LightGreen.Accent3}; background:{Colors.BlueGrey.Darken4}; z-index:100; padding: 0; ")" Class="appBar">
         <AuthorizeView>
             <MudTooltip Text="Menu" Arrow="true">
-                <MudIconButton Icon="@Icons.Material.Filled.Menu" OnClick="@ToggleDrawer"></MudIconButton>
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" Style="@($"color:{Colors.LightGreen.Accent3}")" OnClick="@ToggleDrawer"></MudIconButton>
             </MudTooltip>
         </AuthorizeView>
-        <MudText Typo="Typo.h5" Align="Align.Center" Class="w-100" Color="Color.Dark">SBC-STORE</MudText>
+        <MudNavLink Href="/" Match="NavLinkMatch.All">
+            <MudText Typo="Typo.h5" Align="Align.Center" Class="w-100" Style="@($"color:{Colors.LightGreen.Accent3};" )"></MudText>
+        </MudNavLink>
+        <AuthorizeView Roles="USER">
+            <MudTooltip Text="My Cart" Arrow="true">
+                <MudIconButton Icon="@Icons.Material.Filled.ShoppingCart" Color="Color.Error" OnClick="@(()=> NavigationManager.NavigateTo("/my-cart"))"></MudIconButton>
+            </MudTooltip>
+        </AuthorizeView>
         <MudSpacer />
     </MudAppBar>
     <AuthorizeView>
-        <MudDrawer Id="drawer" Open="@_drawerOpen" PreserveOpenState="false" ClipMode="@DrawerClipMode.Never">
+        <MudDrawer Id="drawer" Open="@_drawerOpen">
             <NavMenu />
         </MudDrawer>
     </AuthorizeView>
